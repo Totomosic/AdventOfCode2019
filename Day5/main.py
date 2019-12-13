@@ -1,6 +1,7 @@
 import sys
 sys.path.append("..")
-from IntCodeComputer import read_code, run_code
+from IntCodeComputer import read_code, IntCodeExecutor, IntCodeInputStream
 
 code = read_code("IntCode.txt")
-run_code(code)
+executor = IntCodeExecutor()
+executor.execute(code)

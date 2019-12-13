@@ -1,6 +1,6 @@
 import sys
 sys.path.append("..")
-from IntCodeComputer import read_code, run_code
+from IntCodeComputer import read_code, IntCodeExecutor
 
 def try_numbers(code_file, result):
     for i in range(100):
@@ -14,7 +14,8 @@ def try_numbers(code_file, result):
     return None
     
 code = read_code("IntCode.txt")
-run_code(code)
+executor = IntCodeExecutor()
+executor.execute(code)
 print(code)
 
 noun, verb = try_numbers("IntCode.txt", 19690720)
