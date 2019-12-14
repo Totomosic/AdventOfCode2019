@@ -22,7 +22,7 @@ def read_code(file):
         result = []
         for code in string_codes:
             result.append(int(code))
-        return result
+        return { "ip" : 0, "code" : result }
 
 # ============================================================================================================
 # STREAM WRAPPERS
@@ -108,15 +108,19 @@ class IntCodeExecutor:
         self.stdin.clear()
         self.stdout.clear()
 
-    def execute(self, code):
-        index = 0
-        while index < len(code):
-            full_opcode = code[index]
+    def execute(self, code_object, callback_map={}):
+        code = code_object["code"]
+        while code_object["ip"] < len(code):
+            full_opcode = code[code_object["ip"]]
             opcode, parameter_modes = parse_opcode(full_opcode)
-            result = self.opcode_map[opcode](code, index, parameter_modes)
+            result = self.opcode_map[opcode](code, code_object["ip"], parameter_modes)
+            code_object["ip"] = result
+            if opcode in callback_map:
+                if callback_map[opcode]():
+                    return False
             if result == EXIT_STATUS:
-                break
-            index = result
+                return True    
+        return True        
 
     def get_parameter_value(self, code, baseIndex, index, parameter_modes, is_output=False):
         mode = 0
