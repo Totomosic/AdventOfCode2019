@@ -70,6 +70,9 @@ class IntCodeStdout:
     def clear(self):
         pass
 
+    def empty(self):
+        return True
+
 class IntCodeOutputStream:
     def __init__(self):
         self.buffer = []
@@ -85,15 +88,19 @@ class IntCodeOutputStream:
             return self.buffer.pop(0)
         raise IndexError("Output stream ran out of data")
 
+    def empty(self):
+        return len(self.buffer) == 0
+
 # ============================================================================================================
 # EXECUTOR
 # ============================================================================================================
 
 class IntCodeExecutor:
-    def __init__(self, stdin=IntCodeStdin(), stdout=IntCodeStdout()):
+    def __init__(self, code, stdin=IntCodeStdin(), stdout=IntCodeStdout()):
         self.stdin = stdin
         self.stdout = stdout
 
+        self.code = code
         self.instruction_pointer = 0
         self.relative_base = 0
 
@@ -124,11 +131,11 @@ class IntCodeExecutor:
         self.stdin.clear()
         self.stdout.clear()
 
-    def execute(self, code, callback_map={}):
-        while self.instruction_pointer < len(code):
-            full_opcode = code[self.instruction_pointer]
+    def execute(self, callback_map={}):
+        while self.instruction_pointer < len(self.code):
+            full_opcode = self.code[self.instruction_pointer]
             opcode, parameter_modes = parse_opcode(full_opcode)
-            result = self.opcode_map[opcode](code, self.instruction_pointer, parameter_modes)
+            result = self.opcode_map[opcode](self.code, self.instruction_pointer, parameter_modes)
             self.instruction_pointer = result
             if opcode in callback_map:
                 if callback_map[opcode]():

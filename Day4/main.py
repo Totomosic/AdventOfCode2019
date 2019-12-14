@@ -12,6 +12,25 @@ def is_valid_password(password, range):
         return False
     prevInt = None
     double = False
+    for c in string:
+        i = int(c)
+        if i == prevInt:
+            double = True
+        if prevInt is not None and i < prevInt:
+            return False
+        prevInt = i
+    if not double:
+        return False
+    return True
+
+def is_valid_password_v2(password, range):
+    string = str(password)
+    if len(string) != 6:
+        return False
+    if password < range[0] or password > range[1]:
+        return False
+    prevInt = None
+    double = False
     doubleCount = 1
     for c in string:
         i = int(c)
@@ -30,13 +49,20 @@ def is_valid_password(password, range):
         return False
     return True
 
-print(is_valid_password(112233,(0,100000000)))
-print(is_valid_password(224444,(0,100000000)))
-print(is_valid_password(111122,(0,100000000)))
-
 min, max = parse_range("range.txt")
+
 count = 0
 for i in range(min, max + 1):
     if is_valid_password(i, (min, max)):
         count += 1
+print("Day 4 - Part 1")
 print(count)
+print(count == 460)
+
+count = 0
+for i in range(min, max + 1):
+    if is_valid_password_v2(i, (min, max)):
+        count += 1
+print("Day 4 - Part 2")
+print(count)
+print(count == 290)

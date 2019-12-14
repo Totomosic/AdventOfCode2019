@@ -8,15 +8,20 @@ def try_numbers(code_file, result):
             code = read_code(code_file)
             code[1] = i
             code[2] = j
-            run_code(code)
+            executor = IntCodeExecutor(code)
+            executor.execute()
             if code[0] == result:
                 return i, j
     return None
     
 code = read_code("IntCode.txt")
-executor = IntCodeExecutor()
-executor.execute(code)
-print(code)
+executor = IntCodeExecutor(code)
+executor.execute()
+print("Day 2 - Part 1")
+print(code[0])
+print(code[0] == 5866714)
 
 noun, verb = try_numbers("IntCode.txt", 19690720)
+print("Day 2 - Part 2")
 print(noun, verb)
+print(noun == 52 and verb == 8)

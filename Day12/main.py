@@ -75,11 +75,17 @@ def calculate_sytem_energy(positions, velocities):
 positions, velocities = read_input("input.txt")
 for i in range(1000):
     simulate(positions, velocities)
-print(calculate_sytem_energy(positions,velocities))
+
+energy = calculate_sytem_energy(positions,velocities)
+print("Day 12 - Part 1")
+print(energy)
+print(energy == 7077)
 
 positions, velocities = read_input("input.txt")
 x = find_cycle_length(positions, velocities, 0)
 y = find_cycle_length(positions, velocities, 1)
 z = find_cycle_length(positions, velocities, 2)
 total = find_lcm([x, y, z])
+print("Day 12 - Part 2")
 print(total)
+print(total == 402951477454512)

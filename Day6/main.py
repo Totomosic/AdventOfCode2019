@@ -56,6 +56,13 @@ def count_from_to(tree, from_node, to_node):
 
 data = read_map_file("map.txt")
 tree = build_tree(data, "COM")
-#print(tree)
-print(count_connections(tree, 1))
-print(count_from_to(tree, "YOU", "SAN") - 2)
+
+connections = count_connections(tree, 1)
+print("Day 6 - Part 1")
+print(connections)
+print(connections == 224901)
+
+distance = count_from_to(tree, "YOU", "SAN") - 2
+print("Day 6 - Part 2")
+print(distance)
+print(distance == 334)

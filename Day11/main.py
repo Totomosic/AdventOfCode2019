@@ -23,12 +23,14 @@ class PaintingPanel:
         if v not in self.painted:
             self.painted.append(v)
 
+    def set_middle(self, value):
+        self.set_value(self.size[0] / 2, self.size[1] / 2, value)
+
 class PaintingRobot:
     def __init__(self, code):
-        self.executor = IntCodeExecutor()
+        self.executor = IntCodeExecutor(code)
         self.executor.stdin = IntCodeInputStream()
         self.executor.stdout = IntCodeOutputStream()
-        self.code = code
         self.position = None
         self.direction = None
 
@@ -46,16 +48,15 @@ class PaintingRobot:
         self.executor.clear_streams()
         self.position = (panel.size / 2).astype(np.int)
         self.direction = np.array([0, 1], dtype=np.int)
-        panel.set_value(self.position[0], self.position[1], 1)
         while True:
             current_value = panel.get_value(self.position[0], self.position[1])
             self.executor.stdin.write(current_value)
-            exited = self.executor.execute(self.code, { 4: lambda: True })
+            exited = self.executor.execute({ 4: lambda: True })
             if exited:
                 break
             new_value = self.executor.stdout.read()
             panel.set_value(self.position[0], self.position[1], new_value)
-            exited = self.executor.execute(self.code, { 4: lambda: True })
+            exited = self.executor.execute({ 4: lambda: True })
             if exited:
                 break
             direction = self.executor.stdout.read()
@@ -66,8 +67,18 @@ code = read_code("IntCode.txt")
 panel = PaintingPanel((100,100))
 robot = PaintingRobot(code)
 robot.paint(panel)
-print(panel.values)
-print(len(panel.painted))
+result = len(panel.painted)
+print("Day 11 - Part 1")
+print(result)
+print(result == 1934)
 
+code = read_code("IntCode.txt")
+panel = PaintingPanel((100,100))
+panel.set_middle(1)
+robot = PaintingRobot(code)
+robot.paint(panel)
+print("Day 11 - Part 2")
+print("See Image")
 image = Image.fromarray(panel.values * 255)
 image.show()
+print(True)

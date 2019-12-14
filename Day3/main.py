@@ -74,7 +74,7 @@ class WireNetwork:
             if is_point_on_line(p0, p1, point):
                 distance = round(np.linalg.norm(point - p0))
                 steps += distance
-                return steps
+                return int(steps)
             steps += round(np.linalg.norm(p1 - p0))
         return None
 
@@ -99,10 +99,11 @@ def find_intersections(networks):
 
 def find_min_distance_intersection(intersections):
     min_distance = math.inf
-    for point in intersections:
-        distance = abs(point[0]) + abs(point[1])
-        if distance < min_distance and distance != 0:
-            min_distance = distance
+    for network_pair in intersections:
+        for point in network_pair["points"]:
+            distance = abs(point[0]) + abs(point[1])
+            if distance < min_distance and distance != 0:
+                min_distance = distance
     return min_distance
 
 def find_intersection_steps(intersections):
@@ -133,6 +134,13 @@ for instructions in instruction_sets:
     networks.append(WireNetwork(instructions))
 
 intersections = find_intersections(networks)
-print(intersections)
+distance = find_min_distance_intersection(intersections)
+print("Day 3 - Part 1")
+print(distance)
+print(distance == 221)
+
 steps = find_intersection_steps(intersections)
-print(min(steps))
+result = min(steps)
+print("Day 3 - Part 2")
+print(result)
+print(result == 18542)

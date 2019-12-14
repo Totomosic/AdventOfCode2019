@@ -56,10 +56,14 @@ for layer in image:
         max_one_pixels = one_pixels
         max_two_pixels = two_pixels
 
-print(max_one_pixels * max_two_pixels)
+result = max_one_pixels * max_two_pixels
+print("Day 8 - Part 1")
+print(result)
+print(result == 1820)
 
 image = decode_image(image, 25, 6) * 255
-print(image)
-
+print("Day 8 - Part 2")
+print("See Image")
 im = Image.fromarray(image.reshape(6, 25).astype(np.uint8))
 im.show()
+print(True)

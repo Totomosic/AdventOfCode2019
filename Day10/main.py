@@ -85,6 +85,12 @@ for i in range(width):
                 x = i
                 y = j
 
-print(x, y, max_visible)
+print("Day 10 - Part 1")
+print((x, y), max_visible)
+print(max_visible == 296)
 order = vaporize(asteroids, x, y)
-print(order[199])
+pair = order[199]
+value = pair[0] * 100 + pair[1]
+print("Day 10 - Part 2")
+print(pair, value)
+print(value == 204)
