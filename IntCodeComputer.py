@@ -16,13 +16,14 @@ def parse_opcode(opcode):
         param_modes.append(int(string[i]))
     return (opcode, param_modes)
 
-def read_code(file):
+def read_code(file, memory_padding=1000):
     with open(file, "r") as f:
         string_codes = f.read().split(',')
         result = []
         for code in string_codes:
             result.append(int(code))
-        return { "ip" : 0, "code" : result }
+        result += [0 for i in range(memory_padding)]
+        return result
 
 # ============================================================================================================
 # STREAM WRAPPERS
@@ -31,12 +32,18 @@ def read_code(file):
 class IntCodeStdin:
     def __init__(self, prompt="> "):
         self.prompt = prompt
+        self.buffer = []
 
     def read(self):
+        if len(self.buffer) > 0:
+            return self.buffer.pop(0)
         return input(self.prompt)
 
     def clear(self):
-        pass
+        self.buffer = []
+
+    def write(self, value):
+        self.buffer.append(value)
 
 class IntCodeInputStream:
     def __init__(self):
@@ -83,13 +90,17 @@ class IntCodeOutputStream:
 # ============================================================================================================
 
 class IntCodeExecutor:
-    def __init__(self):
-        self.stdin = IntCodeStdin()
-        self.stdout = IntCodeStdout()
+    def __init__(self, stdin=IntCodeStdin(), stdout=IntCodeStdout()):
+        self.stdin = stdin
+        self.stdout = stdout
+
+        self.instruction_pointer = 0
+        self.relative_base = 0
 
         self.parameter_mode_map = {
             0 : self.parammode_0,
-            1 : self.parammode_1
+            1 : self.parammode_1,
+            2 : self.parammode_2
         }
 
         self.opcode_map = {
@@ -101,20 +112,24 @@ class IntCodeExecutor:
             6 : self.opcode_6,
             7 : self.opcode_7,
             8 : self.opcode_8,
+            9 : self.opcode_9,
             99 : self.opcode_99
         }
 
     def reset(self):
+        self.relative_base = 0
+        self.instruction_pointer = 0
+
+    def clear_streams(self):
         self.stdin.clear()
         self.stdout.clear()
 
-    def execute(self, code_object, callback_map={}):
-        code = code_object["code"]
-        while code_object["ip"] < len(code):
-            full_opcode = code[code_object["ip"]]
+    def execute(self, code, callback_map={}):
+        while self.instruction_pointer < len(code):
+            full_opcode = code[self.instruction_pointer]
             opcode, parameter_modes = parse_opcode(full_opcode)
-            result = self.opcode_map[opcode](code, code_object["ip"], parameter_modes)
-            code_object["ip"] = result
+            result = self.opcode_map[opcode](code, self.instruction_pointer, parameter_modes)
+            self.instruction_pointer = result
             if opcode in callback_map:
                 if callback_map[opcode]():
                     return False
@@ -126,21 +141,32 @@ class IntCodeExecutor:
         mode = 0
         if index - 1 < len(parameter_modes):
             mode = parameter_modes[index - 1]
-        if is_output:
-            mode = 1
-        return self.parameter_mode_map[mode](code, index + baseIndex)
+        return self.parameter_mode_map[mode](code, index + baseIndex, is_output)
 
     # ============================================================================================================
     # PARAMETER MODES
     # ============================================================================================================
 
     # Position Mode
-    def parammode_0(self, code, current_index):
-        return code[code[current_index]]
+    def parammode_0(self, code, current_index, is_output):
+        index = code[current_index]
+        if is_output:
+            return index
+        return code[index]
 
     # Immediate Mode
-    def parammode_1(self, code, current_index):
-        return code[current_index]
+    def parammode_1(self, code, current_index, is_output):
+        index = current_index
+        if is_output:
+            return index
+        return code[index]
+
+    # Relative Mode
+    def parammode_2(self, code, current_index, is_output):
+        index = code[current_index] + self.relative_base
+        if is_output:
+            return index
+        return code[index]
 
     # ============================================================================================================
     # OPCODES
@@ -201,6 +227,12 @@ class IntCodeExecutor:
         else:
             code[output_index] = FALSE
         return current_index + 4
+
+    # Relative base shift
+    def opcode_9(self, code, current_index, parameter_modes):
+        value = self.get_parameter_value(code, current_index, 1, parameter_modes)
+        self.relative_base += value
+        return current_index + 2
 
     # Exit
     def opcode_99(self, code, current_index, parameter_modes):

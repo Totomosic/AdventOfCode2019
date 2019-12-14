@@ -21,6 +21,7 @@ for combination in phase_settings:
     codes = [read_code(CODE_FILE) for i in range(AMPLIFIER_COUNT)]
     for setting in combination:
         executor.reset()
+        executor.clear_streams()
         executor.stdin.write(setting)
         executor.stdin.write(output)
         code = codes[index]
@@ -40,17 +41,18 @@ max_value = 0
 best_combination = None
 
 for combination in phase_settings:
-    executor.reset()
+    executor.clear_streams()
     output = 0
     codes = [read_code(CODE_FILE) for i in range(AMPLIFIER_COUNT)]
-    for setting, code in zip(combination, codes):
+    executors = [IntCodeExecutor(IntCodeInputStream(), IntCodeOutputStream()) for i in range(AMPLIFIER_COUNT)]
+    for setting, code, executor in zip(combination, codes, executors):
         executor.stdin.write(setting)
         executor.stdin.write(output)
         executor.execute(code, { 4: lambda: True })
         output = executor.stdout.read()
     exited = False
     while not exited:
-        for amplifier in codes:
+        for amplifier, executor in zip(codes, executors):
             executor.stdin.write(output)
             exited = executor.execute(amplifier, { 4: lambda: True })
             if exited:
