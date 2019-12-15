@@ -1,6 +1,6 @@
 import sys
 sys.path.append("..")
-from IntCodeComputer import read_code, IntCodeExecutor, IntCodeInputStream, IntCodeOutputStream
+from IntCodeComputer import read_code, IntCodeExecutor, IntCodeInputStream, IntCodeOutputStream, STATUS_EXIT
 import itertools
 
 CODE_FILE = "IntCode.txt"
@@ -11,17 +11,18 @@ max_value = 0
 best_combination = None
 
 for combination in phase_settings:
-    output = 0
-    index = 0
     executors = [IntCodeExecutor(read_code(CODE_FILE), IntCodeInputStream(), IntCodeOutputStream()) for i in range(AMPLIFIER_COUNT)]
-    for setting, executor in zip(combination, executors):
-        executor.reset()
-        executor.clear_streams()
-        executor.stdin.write(setting)
-        executor.stdin.write(output)
+
+    for i in range(len(executors) - 1):
+        executors[i].stdin.write(combination[i])
+        executors[i].stdout = executors[i + 1].stdin
+    executors[-1].stdin.write(combination[-1])
+
+    executors[0].stdin.write(0)
+    for executor in executors:
         executor.execute()
-        output = executor.stdout.read()
-        index += 1
+
+    output = executors[-1].stdout.read()
     if output > max_value:
         max_value = output
         best_combination = combination
@@ -35,22 +36,19 @@ max_value = 0
 best_combination = None
 
 for combination in phase_settings:
-    executor.clear_streams()
-    output = 0
     executors = [IntCodeExecutor(read_code(CODE_FILE), IntCodeInputStream(), IntCodeOutputStream()) for i in range(AMPLIFIER_COUNT)]
-    for setting, executor in zip(combination, executors):
-        executor.stdin.write(setting)
-        executor.stdin.write(output)
-        executor.execute({ 4: lambda: True })
-        output = executor.stdout.read()
-    exited = False
-    while not exited:
+    # Connect executors together in loop
+    for i in range(len(executors)):
+        executors[i - 1].stdin.write(combination[i - 1])
+        executors[i - 1].stdout = executors[i].stdin
+    executors[0].stdin.write(0)
+    
+    status = None
+    while status != STATUS_EXIT:
         for executor in executors:
-            executor.stdin.write(output)
-            exited = executor.execute({ 4: lambda: True })
-            if exited:
-                break
-            output = executor.stdout.read()
+            status = executor.execute()
+    
+    output = executors[-1].stdout.read()
     if output > max_value:
         max_value = output
         best_combination = combination

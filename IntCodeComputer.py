@@ -2,9 +2,11 @@
 # UTILITIES
 # ============================================================================================================
 
-EXIT_STATUS = -1
 TRUE = 1
 FALSE = 0
+
+STATUS_EXIT = -1
+STATUS_BLOCKED = -2
 
 def parse_opcode(opcode):
     if opcode < 100:
@@ -45,6 +47,9 @@ class IntCodeStdin:
     def write(self, value):
         self.buffer.append(value)
 
+    def empty(self):
+        return False
+
 class IntCodeInputStream:
     def __init__(self):
         self.buffer = []
@@ -59,6 +64,9 @@ class IntCodeInputStream:
 
     def write(self, value):
         self.buffer.append(value)
+
+    def empty(self):
+        return len(self.buffer) == 0
 
 class IntCodeStdout:
     def __init__(self):
@@ -136,13 +144,15 @@ class IntCodeExecutor:
             full_opcode = self.code[self.instruction_pointer]
             opcode, parameter_modes = parse_opcode(full_opcode)
             result = self.opcode_map[opcode](self.code, self.instruction_pointer, parameter_modes)
+            if result == STATUS_EXIT:
+                return STATUS_EXIT
+            if result == STATUS_BLOCKED:
+                return STATUS_BLOCKED
             self.instruction_pointer = result
             if opcode in callback_map:
                 if callback_map[opcode]():
-                    return False
-            if result == EXIT_STATUS:
-                return True    
-        return True        
+                    return STATUS_BLOCKED
+        return STATUS_EXIT        
 
     def get_parameter_value(self, code, baseIndex, index, parameter_modes, is_output=False):
         mode = 0
@@ -193,6 +203,8 @@ class IntCodeExecutor:
 
     # Input
     def opcode_3(self, code, current_index, parameter_modes):
+        if self.stdin.empty():
+            return STATUS_BLOCKED
         output_index = self.get_parameter_value(code, current_index, 1, parameter_modes, is_output=True)
         code[output_index] = int(self.stdin.read())
         return current_index + 2
@@ -243,4 +255,4 @@ class IntCodeExecutor:
 
     # Exit
     def opcode_99(self, code, current_index, parameter_modes):
-        return EXIT_STATUS
+        return STATUS_EXIT

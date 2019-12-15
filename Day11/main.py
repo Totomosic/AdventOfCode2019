@@ -1,6 +1,6 @@
 import sys
 sys.path.append("..")
-from IntCodeComputer import read_code, IntCodeExecutor, IntCodeInputStream, IntCodeOutputStream
+from IntCodeComputer import read_code, IntCodeExecutor, IntCodeInputStream, IntCodeOutputStream, STATUS_EXIT
 
 import numpy as np
 from PIL import Image
@@ -51,13 +51,13 @@ class PaintingRobot:
         while True:
             current_value = panel.get_value(self.position[0], self.position[1])
             self.executor.stdin.write(current_value)
-            exited = self.executor.execute({ 4: lambda: True })
-            if exited:
+            status = self.executor.execute({ 4: lambda: True })
+            if status == STATUS_EXIT:
                 break
             new_value = self.executor.stdout.read()
             panel.set_value(self.position[0], self.position[1], new_value)
-            exited = self.executor.execute({ 4: lambda: True })
-            if exited:
+            status = self.executor.execute({ 4: lambda: True })
+            if status == STATUS_EXIT:
                 break
             direction = self.executor.stdout.read()
             self.change_direction(direction)
